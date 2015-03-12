@@ -30,11 +30,9 @@ tm.main(function() {
 
     // 読み込み完了後に呼ばれるメソッドを登録
     loading.onload = function() {
-        if (app.pointing.getPointing() || app.keyboard.getKey()) {
-            // メインシーンに入れ替える
-            var scene = MainScene();
-            app.replaceScene(scene);
-        }
+        // メインシーンに入れ替える
+        var scene = MainScene();
+        app.replaceScene(scene);
     };
     // ローディングシーンに入れ替える
     app.replaceScene(loading);
@@ -96,17 +94,16 @@ tm.define("MainScene", {
                     this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 600));
                     this.starConter += 1;
                 }
-            }
-            // 当り判定
-            for (var j = 0; j < STAR_NUM; j++) {
-                var dp = this.star[j];
-                if (this.player.isHitElementRect(dp)) {
+                // 当り判定
+                if (this.player.isHitElementRect(this.star[m])) {
                     this.stop();
                     this.lives = false;
                 }
             }
+
             if (pointing.getPointing()) {
-                this.player.x = this.player.x + (pointing.x)*0.1
+                this.player.x += (pointing.x-this.player.x)*0.2;
+                this.player.y += (pointing.y-this.player.y)*0.2;
             }
             // 左矢印キーを押しているかを判定
             if (key.getKey("left")) {
