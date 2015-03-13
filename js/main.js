@@ -2,17 +2,33 @@ var SCREEN_WIDTH = 680;              // スクリーン幅
 var SCREEN_HEIGHT = 960;              // スクリーン高さ
 var SCREEN_CENTER_X = SCREEN_WIDTH / 2;   // スクリーン幅の半分
 var SCREEN_CENTER_Y = SCREEN_HEIGHT / 2;  // スクリーン高さの半分
-var FPS = 120;
+var FPS = 60;
 var SPACE_HIGHT = 1500;
-var STAR_NUM = 2;
-var BOSS_NUM = 10;
+var ENEMY_NUM =10;
+var SCORE = 0;
 var ASSETS = {
     "player": "image/player.png",
     "player--dead": "image/player--dead.png",
     "player--powerup": "image/player--powerup.png",
     "bg": "image/bg.jpg",
     "boss": "image/boss.png"
-}
+};
+var UI_DATA = {
+    LABELS: {
+        children: [
+            {
+                type: "Label",
+                name: "limitTimeLabel",
+                x: 50,
+                y: 50,
+                fillStyle: "white",
+                text: " ",
+                fontSize: 40,
+                align: "left"
+            }
+        ]
+    }
+};
 tm.main(function() {
     // キャンバスアプリケーションを生成
     var app = tm.display.CanvasApp("#world");
@@ -40,14 +56,80 @@ tm.main(function() {
     // 実行
     app.run();
 });
+tm.define("LoadingScene", {
+    superClass: "tm.app.Scene",
 
+    init: function (param) {
+        this.superInit();
+
+        param = {}.$extend({
+            width: 680,
+            height: 960
+        }, param);
+
+        this.bg = tm.display.Shape(param.width, param.height).addChildTo(this);
+        this.bg.canvas.clearColor("#000000");
+        this.bg.setOrigin(0, 0);
+
+        var loadLabel = tm.display.Label("Loading");
+        loadLabel.x = param.width / 2;
+        loadLabel.y = param.height / 2;
+        loadLabel.width = param.width;
+        loadLabel.align = "center";
+        loadLabel.baseline = "middle";
+        loadLabel.fontSize = 64;
+        loadLabel.setFillStyle("#FFFFFF");
+        loadLabel.counter = 0;
+        loadLabel.update = function (app) {
+            if (app.frame % 30 === 0) {
+                this.text += ".";
+                this.counter += 1;
+                if (this.counter > 3) {
+                    this.counter = 0;
+                    this.text = "Star is Genchan Num UP!";
+                }
+            }
+        };
+        loadLabel.addChildTo(this.bg);
+
+        var touchMeLabel = tm.display.Label("touch me, and Move Beetle!").addChildTo(this);
+        touchMeLabel.setPosition(SCREEN_CENTER_X, 180);
+
+        this.bg.tweener.clear().fadeIn(100).call(function () {
+            if (param.assets) {
+                var loader = tm.asset.Loader();
+
+                loader.onload = function () {
+
+                    this.bg.tweener.clear().wait(5000).fadeOut(300).call(function () {
+                        if (param.nextScene) {
+                            this.app.replaceScene(param.nextScene());
+                        }
+                        var e = tm.event.Event("load");
+                        this.fire(e);
+                    }.bind(this));
+
+                }.bind(this);
+
+                loader.onprogress = function (e) {
+                    var event = tm.event.Event("progress");
+                    event.progress = e.progress;
+                    this.fire(event);
+                }.bind(this);
+
+                loader.load(param.assets);
+            }
+        }.bind(this));
+    }
+});    
 // シーンを定義
 tm.define("MainScene", {
     superClass: "tm.app.Scene",
-    starConter: 0,    
+    enemyMaxConter: 1,
+    enemyConter: 0,
     lives: true,
     move: false,
-    
+        
     init: function() {
         this.superInit();
 
@@ -56,16 +138,19 @@ tm.define("MainScene", {
         this.bg = tm.display.Sprite("bg").addChildTo(this);
         this.bg.origin.set(0, 0);
 
-        this.star = new Array(STAR_NUM);
-        for (var i = 0; i < STAR_NUM; i++) {
-            this.star[i] = tm.display.StarShape().addChildTo(this);
-            this.star[i].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 600));
+        // 初期設定Genchan数
+        this.star = new Array(ENEMY_NUM);
+        for (var i = 0; i < ENEMY_NUM; i++) {
+        this.star[i] =  tm.display.Sprite("boss").addChildTo(this);
         }
-
+        this.star[0].setPosition(Math.rand(120, SCREEN_WIDTH - 120), Math.rand(120, 240)).setScale(2,2);
         // assets で指定したキーを指定することで画像を表示
         this.player = player("player").addChildTo(this);
-        this.player.setPosition(SCREEN_CENTER_X, 900).setScale(2, 2);
-        
+        this.player.setPosition(SCREEN_CENTER_X, 900);
+
+        // ラベル表示
+        this.fromJSON(UI_DATA.LABELS);
+
         this.lives = true;
         
     },
@@ -76,28 +161,53 @@ tm.define("MainScene", {
             // キーボード
             var key = app.keyboard;
             var pointing = app.pointing;
-
+			      SCORE++;
+            this.limitTimeLabel.text = "SCORE:" + SCORE;
             // ☆を設置する
-            for (var m = 0; m < STAR_NUM; m++) {
-                if (m % 2 == 0) {
-                    this.star[m].x += 6;
-                    this.star[m].y += 30;
+            for (var m = 0; m < this.enemyMaxConter; m++) {
+                if (this.enemyConter % 20 <= 20 && this.enemyConter % 20 > 16) {
+                    this.star[m].x += 5;
+                    this.star[m].y += 15;
+                } else if (this.enemyConter % 20 <= 16 && this.enemyConter % 20 > 12) {
+                    this.star[m].y += 10;
+                } else if (this.enemyConter % 20 <= 12 && this.enemyConter % 20 > 8) {
+                    this.star[m].x = this.star[m].x - 15;
+                    this.star[m].y += 5;
+                } else if (this.enemyConter % 20 <= 8 && this.enemyConter % 20 > 4) {
+                    this.star[m].x += 15;
+                    this.star[m].y += 15;
                 } else {
-                    this.star[m].x = this.star[m].x - 6;
+                    this.star[m].x = this.star[m].x - 5;
                     this.star[m].y += 10;
                 }
                 // クルクル回す
-                this.star[m].rotation += 16;
-                // 星が画面外に出たら、おしまい
-                if (this.star[m].x >= SCREEN_WIDTH || this.star[m].y >= SCREEN_HEIGHT) {
-                    this.star[m] = tm.display.StarShape().addChildTo(this);
-                    this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 600));
-                    this.starConter += 1;
-                }
+                this.star[m].rotation += 16;                    
                 // 当り判定
-                if (this.player.isHitElementRect(this.star[m])) {
+                if (this.player.isHitPointRect(this.star[m].x,this.star[m].y)) {
                     this.stop();
                     this.lives = false;
+                }                    
+
+                // 星が画面外に出たら、おしまい
+                if (this.star[m].x <= 0 || this.star[m].x >= SCREEN_WIDTH || this.star[m].y >= SCREEN_HEIGHT || this.star[m].y <= 0) {
+                    if (this.enemyConter % 10 == 0) {
+                        this.star[m] = tm.display.StarShape().addChildTo(this);
+                    } else if (this.enemyConter % 10 == 5) {
+//                        
+                    } else {
+                        this.star[m] =  tm.display.Sprite("boss").addChildTo(this);
+                    }
+
+                    if(this.enemyConter % 30 == 0 ) {
+                        this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 200)).setScale(2,2);
+                        if (this.enemyMaxConter !== 10) {
+                            this.enemyMaxConter++;                            
+                        }
+                        
+                    } else {
+                        this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 300));                        
+                    }
+                    this.enemyConter++;
                 }
             }
 
@@ -109,18 +219,18 @@ tm.define("MainScene", {
             if (key.getKey("left")) {
                 // 移動
                 if(this.player.x >= 0) {
-                    this.player.x-=8;
+                    this.player.x-=18;
                     // 向き調整
-                    this.player.scaleX = -2;                    
+                    this.player.scaleX = -1;                    
                 }
             }
             // 右矢印キーを押しているかを判定
             if (key.getKey("right")) {
                 // 移動
                 if(this.player.x <= SCREEN_WIDTH) {
-                    this.player.x+=8;
+                    this.player.x+=18;
                     // 向き調整
-                    this.player.scaleX = 2;
+                    this.player.scaleX = 1;
                 }
             }
         }
@@ -129,10 +239,10 @@ tm.define("MainScene", {
         this.move = false;
         this.player.stop();
         //リトライ
-        this.btnRetry = tm.ui.FlatButton({
-            width: 150,
+        this.btnHardRetry = tm.ui.FlatButton({
+            width: 200,
             height: 50,
-            text: "リトライ",
+            text: "Hard Retry",
             bgColor: "red",
             fontSize: 35
         }).addChildTo(this).on("pointingend", function (e) {
@@ -140,7 +250,19 @@ tm.define("MainScene", {
             e.app.fps = FPS;
             e.app.replaceScene(MainScene());
         });
-        this.btnRetry.setPosition(125, 110);
+        this.btnEasyRetry = tm.ui.FlatButton({
+            width: 200,
+            height: 50,
+            text: "Easy Retry",
+            bgColor: "red",
+            fontSize: 35
+        }).addChildTo(this).on("pointingend", function (e) {
+            SCORE = 0;
+            e.app.fps = 15;
+            e.app.replaceScene(MainScene());
+        });
+        this.btnEasyRetry.setPosition(125, 110);
+        this.btnHardRetry.setPosition(125, 160);
 
     }
 });
