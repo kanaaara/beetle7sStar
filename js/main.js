@@ -61,7 +61,7 @@ tm.define("LoadingScene", {
 
     init: function (param) {
         this.superInit();
-console.log("init");
+
         param = {}.$extend({
             width: SCREEN_WIDTH,
             height: SCREEN_HEIGHT
@@ -91,7 +91,6 @@ console.log("init");
             }
         };
         loadLabel.addChildTo(this.bg);
-console.log("load label");
         var touchMeLabel = tm.display.Label("touch me, and Move Beetle!").addChildTo(this);
         touchMeLabel.setPosition(SCREEN_CENTER_X, 180);
 
@@ -120,7 +119,6 @@ console.log("load label");
                 loader.load(param.assets);
             }
         }.bind(this));
-console.log("loader");
     }
 });    
 // シーンを定義
