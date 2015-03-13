@@ -38,7 +38,7 @@ tm.main(function() {
     app.fitWindow();
 
     // ローダーで画像を読み込む
-    var loading = tm.ui.LoadingScene({
+    var loading = LoadingScene({
         assets: ASSETS,
         width: SCREEN_WIDTH,
         height: SCREEN_HEIGHT,
@@ -61,10 +61,10 @@ tm.define("LoadingScene", {
 
     init: function (param) {
         this.superInit();
-
+console.log("init");
         param = {}.$extend({
-            width: 680,
-            height: 960
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT
         }, param);
 
         this.bg = tm.display.Shape(param.width, param.height).addChildTo(this);
@@ -77,7 +77,7 @@ tm.define("LoadingScene", {
         loadLabel.width = param.width;
         loadLabel.align = "center";
         loadLabel.baseline = "middle";
-        loadLabel.fontSize = 64;
+        loadLabel.fontSize = 32;
         loadLabel.setFillStyle("#FFFFFF");
         loadLabel.counter = 0;
         loadLabel.update = function (app) {
@@ -91,7 +91,7 @@ tm.define("LoadingScene", {
             }
         };
         loadLabel.addChildTo(this.bg);
-
+console.log("load label");
         var touchMeLabel = tm.display.Label("touch me, and Move Beetle!").addChildTo(this);
         touchMeLabel.setPosition(SCREEN_CENTER_X, 180);
 
@@ -120,6 +120,7 @@ tm.define("LoadingScene", {
                 loader.load(param.assets);
             }
         }.bind(this));
+console.log("loader");
     }
 });    
 // シーンを定義
@@ -189,7 +190,7 @@ tm.define("MainScene", {
                 }                    
 
                 // 星が画面外に出たら、おしまい
-                if (this.star[m].x <= 0 || this.star[m].x >= SCREEN_WIDTH || this.star[m].y >= SCREEN_HEIGHT || this.star[m].y <= 0) {
+                if ( this.star[m].y >= SCREEN_HEIGHT || this.star[m].y <= 0) {
                     if (this.enemyConter % 10 == 0) {
                         this.star[m] = tm.display.StarShape().addChildTo(this);
                     } else if (this.enemyConter % 10 == 5) {
