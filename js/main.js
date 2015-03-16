@@ -141,6 +141,7 @@ tm.define("MainScene", {
         this.star = new Array(ENEMY_NUM);
         for (var i = 0; i < ENEMY_NUM; i++) {
         this.star[i] =  tm.display.Sprite("boss").addChildTo(this);
+        this.star[i].setPosition(-120,-120);
         }
         this.star[0].setPosition(Math.rand(120, SCREEN_WIDTH - 120), Math.rand(120, 240)).setScale(2,2);
         // assets で指定したキーを指定することで画像を表示
@@ -188,7 +189,7 @@ tm.define("MainScene", {
                 }                    
 
                 // 星が画面外に出たら、おしまい
-                if ( this.star[m].y >= SCREEN_HEIGHT || this.star[m].y <= 0) {
+                if ( this.star[m].x <= -120 || this.star[m].x >= SCREEN_WIDTH + 120 || this.star[m].y >= SCREEN_HEIGHT + 120 || this.star[m].y <= -120) {
                     if (this.enemyConter % 10 == 0) {
                         this.star[m] = tm.display.StarShape().addChildTo(this);
                     } else if (this.enemyConter % 10 == 5) {
@@ -211,7 +212,9 @@ tm.define("MainScene", {
             }
 
             if (pointing.getPointing()) {
-                this.player.x += (pointing.x-this.player.x)*0.2;
+                if(this.player.x >= 0 && this.player.x <= SCREEN_WIDTH) {
+                    this.player.x += (pointing.x-this.player.x)*0.2;
+                }
                 this.player.y += (pointing.y-this.player.y)*0.2;
             }
             // 左矢印キーを押しているかを判定
