@@ -166,8 +166,8 @@ tm.define("MainScene", {
             // ☆を設置する
             for (var m = 0; m < this.enemyMaxConter; m++) {
                 if (this.enemyConter % 20 <= 20 && this.enemyConter % 20 > 16) {
-                    this.star[m].x += 5;
-                    this.star[m].y += 15;
+                    this.star[m].x += 15;
+                    this.star[m].y = this.star[m].y - 3;
                 } else if (this.enemyConter % 20 <= 16 && this.enemyConter % 20 > 12) {
                     this.star[m].y += 10;
                 } else if (this.enemyConter % 20 <= 12 && this.enemyConter % 20 > 8) {
@@ -181,55 +181,55 @@ tm.define("MainScene", {
                     this.star[m].y += 10;
                 }
                 // クルクル回す
-                this.star[m].rotation += 16;                    
+                this.star[m].rotation += 16;
                 // 当り判定
                 if (this.player.isHitPointRect(this.star[m].x,this.star[m].y)) {
                     this.stop();
                     this.lives = false;
-                }                    
+                }
 
                 // 星が画面外に出たら、おしまい
                 if ( this.star[m].x <= -120 || this.star[m].x >= SCREEN_WIDTH + 120 || this.star[m].y >= SCREEN_HEIGHT + 120 || this.star[m].y <= -120) {
-                    if (this.enemyConter % 10 == 0) {
+                    if (this.enemyConter % 30 == 0) {
                         this.star[m] = tm.display.StarShape().addChildTo(this);
-                    } else if (this.enemyConter % 10 == 5) {
-//                        
-                    } else {
-                        this.star[m] =  tm.display.Sprite("boss").addChildTo(this);
-                    }
-
-                    if(this.enemyConter % 30 == 0 ) {
                         this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 200)).setScale(2,2);
                         if (this.enemyMaxConter !== 10) {
-                            this.enemyMaxConter++;                            
+                            this.enemyMaxConter++;
                         }
-                        
                     } else {
-                        this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 300));                        
+                        this.star[m] = tm.display.Sprite("boss").addChildTo(this);
+                        this.star[m].setPosition(Math.rand(0, SCREEN_WIDTH), Math.rand(0, 300));
                     }
                     this.enemyConter++;
                 }
             }
 
             if (pointing.getPointing()) {
-                if(this.player.x >= 0 && this.player.x <= SCREEN_WIDTH) {
-                    this.player.x += (pointing.x-this.player.x)*0.2;
+console.log(pointing.x);
+console.log(this.player.x);
+				var movementX =this.player.x + (pointing.x-this.player.x)*0.2
+                if (movementX >= 60 && movementX <= SCREEN_WIDTH - 60) {
+                    this.player.x = movementX;
+                } else if (pointing.x < 60){
+                    this.player.x = 60;
+                } else if (pointing.x > SCREEN_WIDTH - 60){
+                    this.player.x = SCREEN_WIDTH - 60;
                 }
                 this.player.y += (pointing.y-this.player.y)*0.2;
             }
             // 左矢印キーを押しているかを判定
             if (key.getKey("left")) {
                 // 移動
-                if(this.player.x >= 0) {
+                if(this.player.x >= 60) {
                     this.player.x-=18;
                     // 向き調整
-                    this.player.scaleX = -1;                    
+                    this.player.scaleX = -1;
                 }
             }
             // 右矢印キーを押しているかを判定
             if (key.getKey("right")) {
                 // 移動
-                if(this.player.x <= SCREEN_WIDTH) {
+                if(this.player.x <= SCREEN_WIDTH - 60) {
                     this.player.x+=18;
                     // 向き調整
                     this.player.scaleX = 1;
